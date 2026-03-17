@@ -45,8 +45,9 @@
 - **Testing** : PHPUnit (Backend) & Vitest (Frontend)
 
 ## Running with Docker
-
 **Aplikasi ini telah mendukung kontainerisasi menggunakan Docker. Pastikan Docker Desktop telah terpasang di komputer Anda**
+
+**Pada file "docker-compose.yml" ubah nama database dan password database dengan milik kalian**
 
 **Akses Aplikasi:**
 - **Frontend: http://localhost:5173**
