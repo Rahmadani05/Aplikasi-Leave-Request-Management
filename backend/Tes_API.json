@@ -1,0 +1,114 @@
+{
+	"info": {
+		"name": "API Documentation",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@energeek.id\",\n    \"password\": \"tes123\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": "{{base_url}}/api/login"
+					}
+				}
+			]
+		},
+		{
+			"name": "Admin - User Management",
+			"item": [
+				{
+					"name": "Get All Users",
+					"request": {
+						"method": "GET",
+						"url": "{{base_url}}/api/users"
+					}
+				},
+				{
+					"name": "Create User",
+					"request": {
+						"method": "POST",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Budi Santoso\",\n    \"email\": \"budi@energeek.id\",\n    \"password\": \"password123\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": "{{base_url}}/api/users"
+					}
+				}
+			]
+		},
+		{
+			"name": "Leave Requests",
+			"item": [
+				{
+					"name": "Get My Leave Balances",
+					"request": {
+						"method": "GET",
+						"url": "{{base_url}}/api/my-balances"
+					}
+				},
+				{
+					"name": "Submit Leave Request",
+					"request": {
+						"method": "POST",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"leave_type_id\": 1,\n    \"start_date\": \"2026-03-20\",\n    \"end_date\": \"2026-03-22\",\n    \"reason\": \"Liburan Keluarga\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": "{{base_url}}/api/leave-requests"
+					}
+				},
+				{
+					"name": "Cancel Request (User)",
+					"request": {
+						"method": "PUT",
+						"url": "{{base_url}}/api/leave-requests/3/cancel"
+					}
+				},
+				{
+					"name": "Respond Request (Admin)",
+					"request": {
+						"method": "PUT",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"approved\",\n    \"admin_notes\": \"Selamat berlibur!\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": "{{base_url}}/api/leave-requests/3/respond"
+					}
+				},
+				{
+					"name": "Soft Delete Request",
+					"request": {
+						"method": "DELETE",
+						"url": "{{base_url}}/api/leave-requests/3"
+					}
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [ { "key": "token", "value": "{{token}}", "type": "string" } ]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": { "type": "text/javascript", "exec": [ "" ] }
+		}
+	],
+	"variable": [
+		{ "key": "base_url", "value": "http://localhost:8000" },
+		{ "key": "token", "value": "masukkan_token_disini" }
+	]
+}
