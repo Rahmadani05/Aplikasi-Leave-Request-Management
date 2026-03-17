@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use App\Models\LeaveRequest;
 use App\Models\LeaveBalance;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class LeaveRequestController extends Controller
 {
@@ -13,12 +14,12 @@ class LeaveRequestController extends Controller
     public function index(Request $request)
     {
         $query = LeaveRequest::with(['leaveType']);
-        
+
         if ($request->user()->role === 'user') {
-            $query->where('user_id', $request->user()->id); 
+            $query->where('user_id', $request->user()->id);
         }
-        
-        return response()->json(['data' => $query->orderBy('created_at', 'desc')->get()]); 
+
+        return response()->json(['data' => $query->orderBy('created_at', 'desc')->get()]);
     }
 
     // User Submit Pengajuan Cuti
@@ -30,8 +31,8 @@ class LeaveRequestController extends Controller
 
         $validated = $request->validate([
             'leave_type_id' => 'required|exists:leave_types,id',
-            'start_date' => 'required|date|after_or_equal:today', 
-            'end_date' => 'required|date|after_or_equal:start_date', 
+            'start_date' => 'required|date|after_or_equal:today',
+            'end_date' => 'required|date|after_or_equal:start_date',
             'reason' => 'required|string',
         ], [
             'start_date.after_or_equal' => 'Tanggal mulai tidak boleh sebelum tanggal mulai',
@@ -41,7 +42,7 @@ class LeaveRequestController extends Controller
         $user = $request->user();
         $start = Carbon::parse($validated['start_date']);
         $end = Carbon::parse($validated['end_date']);
-        
+
         // Hitung total hari
         $totalDays = $start->diffInDays($end) + 1;
 
@@ -53,7 +54,7 @@ class LeaveRequestController extends Controller
 
         $remaining = $balance ? ($balance->total_quota - $balance->used) : 0;
         if ($totalDays > $remaining) {
-            return response()->json(['message' => 'Sisa kuota cuti tidak mencukupi untuk jumlah hari yang diajukan'], 400); 
+            return response()->json(['message' => 'Sisa kuota cuti tidak mencukupi untuk jumlah hari yang diajukan'], 400);
         }
 
         // Validasi Overlap (bentrok dengan pending/approved)
@@ -61,15 +62,15 @@ class LeaveRequestController extends Controller
             ->whereIn('status', ['pending', 'approved']) // 
             ->where(function ($query) use ($start, $end) {
                 $query->whereBetween('start_date', [$start, $end])
-                      ->orWhereBetween('end_date', [$start, $end])
-                      ->orWhere(function ($q) use ($start, $end) {
-                          $q->where('start_date', '<=', $start)
+                    ->orWhereBetween('end_date', [$start, $end])
+                    ->orWhere(function ($q) use ($start, $end) {
+                        $q->where('start_date', '<=', $start)
                             ->where('end_date', '>=', $end);
-                      });
+                    });
             })->exists();
 
         if ($hasOverlap) {
-            return response()->json(['message' => 'Tanggal pengajuan bentrok dengan cuti Anda yang lain (Pending/Approved)'], 400); 
+            return response()->json(['message' => 'Tanggal pengajuan bentrok dengan cuti Anda yang lain (Pending/Approved)'], 400);
         }
 
         $leaveRequest = LeaveRequest::create([
@@ -100,7 +101,7 @@ class LeaveRequestController extends Controller
         $leaveRequest = LeaveRequest::findOrFail($id);
 
         if ($leaveRequest->status !== 'pending') {
-            return response()->json(['message' => 'Hanya request berstatus pending yang dapat direspon'], 400); 
+            return response()->json(['message' => 'Hanya request berstatus pending yang dapat direspon'], 400);
         }
 
         $leaveRequest->status = $validated['status'];
@@ -114,7 +115,7 @@ class LeaveRequestController extends Controller
                 ->where('leave_type_id', $leaveRequest->leave_type_id)
                 ->where('year', date('Y'))
                 ->first();
-            
+
             $balance->used += $leaveRequest->total_days;
             $balance->save();
         }
@@ -125,46 +126,60 @@ class LeaveRequestController extends Controller
     }
 
     // User Cancel Request
-    public function cancel(Request $request, $id)
+    public function cancel($id)
     {
-        $leaveRequest = LeaveRequest::where('id', $id)->where('user_id', $request->user()->id)->firstOrFail();
+        $userId = request()->user()->id;
+
+        $leaveRequest = LeaveRequest::where('user_id', $userId)->findOrFail($id);
 
         if ($leaveRequest->status !== 'pending') {
-            return response()->json(['message' => 'Hanya request berstatus pending yang dapat dibatalkan'], 400); 
+            return response()->json(['message' => 'Hanya request pending yang bisa dibatalkan.'], 400);
         }
 
-        $leaveRequest->status = 'cancelled';
-        $leaveRequest->save(); // Balance tetap
+        $leaveRequest->update(['status' => 'cancelled']);
 
-        return response()->json(['message' => 'Pengajuan cuti berhasil dibatalkan', 'data' => $leaveRequest]);
+        $balance = LeaveBalance::where('user_id', $userId)
+            ->where('leave_type_id', $leaveRequest->leave_type_id)
+            ->first();
+
+        if ($balance) {
+            $balance->used -= $leaveRequest->total_days;
+            $balance->save();
+        }
+
+        return response()->json(['message' => 'Request berhasil dibatalkan.']);
     }
 
     // Soft Delete Request
-    public function destroy(Request $request, $id)
+    public function destroy($id)
     {
-        $leaveRequest = LeaveRequest::findOrFail($id);
-        $user = $request->user();
+        // Mengambil user yang sedang login dengan cara yang aman bagi editor
+        $user = Auth::user(); 
+    
+    // Jika masih merah, gunakan casting manual (Opsional)
+        /** @var \App\Models\User $user */
 
-        // Cek aturan hapus untuk Admin
-        if ($user->role === 'admin') {
-            if ($leaveRequest->status === 'pending') {
-                return response()->json(['message' => 'Request pending tidak dapat dihapus, harus dicancel dulu'], 400);
+        $leaveRequest = LeaveRequest::findOrFail($id);
+
+        // JIKA BUKAN ADMIN, terapkan aturan status
+        if ($user->role !== 'admin') {
+            if (!in_array($leaveRequest->status, ['cancelled', 'rejected'])) {
+                return response()->json([
+                    'message' => 'Hanya status cancelled/rejected yang boleh dihapus.'
+                ], 403);
             }
-        } 
-        // Cek aturan hapus untuk User
-        else {
+
+            // Pastikan user biasa hanya bisa hapus miliknya sendiri
             if ($leaveRequest->user_id !== $user->id) {
                 return response()->json(['message' => 'Unauthorized'], 403);
             }
-            if (!in_array($leaveRequest->status, ['cancelled', 'rejected'])) {
-                return response()->json(['message' => 'Anda hanya dapat menghapus request yang berstatus cancelled atau rejected'], 400); 
-            }
         }
 
-        $leaveRequest->deleted_by = $user->id; 
+        // Eksekusi Soft Delete
+        $leaveRequest->deleted_by = $user->id;
         $leaveRequest->save();
-        $leaveRequest->delete(); // Soft delete mengisi deleted_at
+        $leaveRequest->delete();
 
-        return response()->json(['message' => 'Data cuti berhasil dihapus (soft delete)']);
+        return response()->json(['message' => 'Berhasil dihapus.']);
     }
 }

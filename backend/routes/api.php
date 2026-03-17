@@ -26,4 +26,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Khusus Admin
     Route::put('/leave-requests/{id}/respond', [LeaveRequestController::class, 'respond']);
+
+    Route::get('/my-balances', function (Illuminate\Http\Request $request) {
+        return response()->json([
+            'data' => \App\Models\LeaveBalance::with('leaveType')
+                ->where('user_id', $request->user()->id)
+                ->where('year', date('Y'))
+                ->get()
+        ]);
+    });
 });
