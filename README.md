@@ -29,6 +29,14 @@
 - **Soft Delete System**: Data yang dihapus tetap tersimpan di database dengan audit trail (`deleted_at`, `deleted_by`).
 - **State Machine Flow**: Alur permohonan (Pending -> Approved/Rejected/Cancelled).
 
+## Leave Request Flow
+**Sistem ini mengikuti alur status sebagai berikut**:
+- **Pending**: Status awal saat diajukan.
+- **Approved**: Disetujui Admin (Saldo berkurang).
+- **Rejected**: Ditolak Admin (Saldo kembali).
+- **Cancelled**: Dibatalkan User (Hanya bisa untuk status pending).
+- **Soft Deleted**: Data dihapus dari list tapi tetap ada di DB untuk kebutuhan audit.
+
 ## Tech Stack
 - **Backend** : Laravel 12
 - **Frontend** : Vue.js 3 (Vite), Pinia, Tailwind CSS, TypeScript

@@ -10,7 +10,7 @@ tool : Chatgpt
 
 3.
 Prompt : Error undefined variable dalam protected fillable di app/Models/LeaveRequests.php
-Penyelesaian : hanya error di vscode jadi harus diketik ulang
+Penyelesaian : hanya error di vscode jadi harus diketik ulangg
 tool : Chatgpt
 
 4.
