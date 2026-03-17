@@ -1,6 +1,6 @@
 # Pada Backend rename file .env.example sehingga menjadi .env dan ubah mengikuti berikut :
 - DB_CONNECTION=pgsql
-- DB_HOST=127.0.0.1
+- DB_HOST=127.0.0.1 (atau ubah menjadi "db" agar bisa running dari Docker)
 - DB_PORT=5432
 - DB_DATABASE= (isi dengan nama database kalian)
 - DB_USERNAME=postgres
@@ -8,6 +8,7 @@
 
 ## Install Depedensi Backend Laravel
 - **composer update**
+- **php artisan migrate:fresh --seed**
 
 ## Install Depedensi Frontend Vue.js
 - **npm install**
@@ -47,9 +48,14 @@
 
 **Aplikasi ini telah mendukung kontainerisasi menggunakan Docker. Pastikan Docker Desktop telah terpasang di komputer Anda**
 
-### Langkah-langkah:
+**Akses Aplikasi:**
+- **Frontend: http://localhost:5173**
+- **Backend API: http://localhost:8000**
+
+**Langkah-langkah:**
 - **Pastikan Anda berada di root folder project**
-- **Jalankan perintah berikut**: docker-compose up --build
+- **Jalankan Migrasi (wajib)**: docker-compose exec backend php artisan migrate:fresh --seed
+- **Build dan Run**: docker-compose up --build
 
 ## Clone Repositori
 - https://github.com/Rahmadani05/Aplikasi-Leave-Request-Management.git
