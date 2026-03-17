@@ -9,9 +9,9 @@ services:
       - db
     environment:
       DB_HOST: db
-      DB_DATABASE: leavehub
-      DB_USERNAME: root
-      DB_PASSWORD: password
+      DB_DATABASE: aplikasi-leave-request-management
+      DB_USERNAME: postgres
+      DB_PASSWORD: darkvenus05
 
   frontend:
     build: ./frontend
@@ -19,11 +19,13 @@ services:
       - "5173:5173"
     volumes:
       - ./frontend:/app
+      - /app/node_modules
 
   db:
-    image: mysql:8.0
+    image: postgres:15-alpine
     environment:
-      MYSQL_DATABASE: leavehub
-      MYSQL_ROOT_PASSWORD: password
+      POSTGRES_DB: aplikasi-leave-request-management
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: darkvenus05
     ports:
-      - "3306:3306"
+      - "5432:5432"
