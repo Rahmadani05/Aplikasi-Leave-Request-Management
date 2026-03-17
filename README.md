@@ -43,6 +43,14 @@
 - **Database** : PostgreSQL
 - **Testing** : PHPUnit (Backend) & Vitest (Frontend)
 
+## Running with Docker
+
+**Aplikasi ini telah mendukung kontainerisasi menggunakan Docker. Pastikan Docker Desktop telah terpasang di komputer Anda**
+
+### Langkah-langkah:
+- **Pastikan Anda berada di root folder project**
+- **Jalankan perintah berikut**: docker-compose up --build
+
 ## Clone Repositori
 - https://github.com/Rahmadani05/Aplikasi-Leave-Request-Management.git
 
