@@ -12,18 +12,22 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const response = await api.post('/login', { email, password })
       
-      // Simpan token dan data user
       token.value = response.data.access_token
       user.value = response.data.user
       localStorage.setItem('token', token.value)
       localStorage.setItem('user', JSON.stringify(user.value))
       
-      router.push('/')
+      if (user.value.role === 'admin') {
+        router.push('/')
+      } else {
+        router.push('/sisa-kuota')
+      }
+      
       return { success: true }
     } catch (error: any) {
       return { 
         success: false, 
-        message: error.response?.data?.message || 'Terjadi kesalahan pada server'
+        message: error.response?.data?.message || 'Terjadi kesalahan pada server.'
       }
     }
   }
